@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pelada Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF1E8; --surface:#FFFFFF; --surface2:#F4F6EF; --ink:#10271B; --muted:#5B6B60;
+  --line:#D3DBCF; --grass:#1F6B3E; --grass-ink:#FFFFFF; --accent:#D9A300; --danger:#C2362F;
+  --display:"Barlow Condensed","Arial Narrow","Roboto Condensed",sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E2218; --surface:#15301F; --surface2:#1B3A27; --ink:#EEF2EA; --muted:#9DB3A4;
+    --line:#2A4A38; --grass:#1A5C35; --grass-ink:#FFFFFF; --accent:#F5C518; --danger:#F07167;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E2218; --surface:#15301F; --surface2:#1B3A27; --ink:#EEF2EA; --muted:#9DB3A4;
+  --line:#2A4A38; --grass:#1A5C35; --grass-ink:#FFFFFF; --accent:#F5C518; --danger:#F07167;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 var(--body);-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1.1}
+h2{font-size:24px}
+h3{font-size:22px}
+
+/* Cabeçalho */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--grass);color:var(--grass-ink)}
+.bar-in{max-width:720px;margin:0 auto;padding:10px 16px 0}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font-size:30px;letter-spacing:.5px}
+.brand .pill{margin-left:auto;font-size:13px;background:rgba(255,255,255,.16);padding:3px 10px;border-radius:99px}
+.tabs{display:flex;margin-top:6px}
+.tabs button{flex:1;background:none;border:0;border-bottom:3px solid transparent;padding:10px 4px 9px;color:rgba(255,255,255,.72);font-weight:600;font-size:15px}
+.tabs button[aria-selected="true"]{color:#fff;border-bottom-color:var(--accent)}
+
+.wrap{max-width:720px;margin:0 auto;padding:16px 16px 40px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.hint{color:var(--muted);font-size:14px;margin:4px 0 10px}
+.center{text-align:center}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{width:100%}
+
+textarea,select{width:100%;background:var(--surface2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:16px}
+textarea{resize:vertical;min-height:150px}
+select{margin-bottom:10px}
+
+.btn{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-weight:600;font-size:15px}
+.btn.small{padding:7px 12px;font-size:14px}
+.btn-go{background:var(--accent);border-color:var(--accent);color:#1A1400}
+.btn-primary{display:block;background:var(--grass);color:var(--grass-ink);border:0;border-radius:12px;padding:14px;font-family:var(--display);font-weight:800;font-size:26px;margin:4px 0 16px}
+.btn-primary:active,.btn:active,.pbtn:active,.res:active{transform:scale(.98)}
+.link{background:none;border:0;padding:6px 0;font-size:14px;font-weight:600;color:var(--muted);text-decoration:underline}
+.link.danger{color:var(--danger)}
+.link:disabled{opacity:.4;text-decoration:none}
+
+.pill-soft{font-size:13px;font-weight:600;background:var(--surface2);border:1px solid var(--line);padding:3px 10px;border-radius:99px;white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:14px}
+.chip .dot{width:10px;height:10px;border-radius:50%;background:var(--c,var(--line))}
+.chip.is-out{text-decoration:line-through;color:var(--danger);border-color:var(--danger)}
+.chip.no-team{border-style:dashed}
+.chip.stale{opacity:.5}
+.chip .x{background:none;border:0;padding:0 0 0 4px;font-size:15px;color:var(--muted)}
+
+/* Times sorteados */
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.team{background:var(--surface);border:1px solid var(--line);border-left:8px solid var(--c);border-radius:12px;padding:12px 14px}
+.team ul{list-style:none;margin:8px 0 0;padding:0}
+.team li{padding:6px 0;border-bottom:1px solid var(--line)}
+.team li:last-child{border-bottom:0}
+.team li.is-out{color:var(--muted);text-decoration:line-through}
+.count{font-family:var(--display);font-weight:600;font-size:18px;color:var(--muted)}
+.warn{font-size:13px;margin:8px 0 0;padding:7px 9px;border-radius:8px;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
+#postDraw{margin-top:14px}
+
+/* Placar */
+.board-head{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-weight:600;font-size:14px}
+.tag{font-size:12px;padding:2px 8px;border-radius:6px;background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--ink)}
+.board{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;margin:10px 0 4px;text-align:center}
+.side .colete{display:block;height:8px;border-radius:4px;background:var(--c);margin:0 auto 6px;width:56px}
+.side .tn{font-family:var(--display);font-weight:800;font-size:24px}
+.score{font-family:var(--display);font-weight:800;font-size:clamp(64px,20vw,104px);line-height:.95;font-variant-numeric:tabular-nums;display:flex;gap:10px;align-items:baseline}
+.score .x{font-size:.35em;color:var(--muted);font-weight:600}
+.rosters{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.roster{display:flex;flex-direction:column;gap:6px}
+.pbtn{display:flex;justify-content:space-between;align-items:center;gap:6px;text-align:left;background:var(--surface2);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:9px;padding:10px;font-size:15px;min-height:44px}
+.pbtn span{min-width:0;overflow-wrap:anywhere}
+.pbtn small{display:block;font-size:11px;color:var(--muted)}
+.pbtn.loan{border-style:dashed;border-left-style:solid}
+.pbtn b{font-family:var(--display);font-size:18px;white-space:nowrap}
+.undo-row{text-align:center;margin:6px 0 4px}
+.results{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;padding-top:14px;border-top:1px solid var(--line)}
+.res{background:var(--surface2);border:1px solid var(--line);border-top:5px solid var(--c,var(--muted));border-radius:10px;padding:10px 6px;font-weight:600;font-size:14px;line-height:1.2}
+.res small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+.res.suggest{outline:2px solid var(--accent);outline-offset:1px}
+
+/* Fila */
+.qrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.qrow:last-child{border-bottom:0}
+.qpos{font-family:var(--display);font-weight:800;font-size:22px;color:var(--muted);width:22px}
+.qrow .colete{width:10px;align-self:stretch;border-radius:4px;background:var(--c)}
+.qrow .meta{font-size:13px;color:var(--muted)}
+
+/* Artilharia */
+.rk{display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.rk:last-child{border-bottom:0}
+.rk .pos{font-family:var(--display);font-weight:800;font-size:24px;color:var(--muted)}
+.rk .g{font-family:var(--display);font-weight:800;font-size:26px}
+.rk.top .pos,.rk.top .g{color:var(--accent)}
+.rk.top .nm{font-weight:600}
+.rk .sub{font-size:12px;color:var(--muted)}
+.hrow{padding:10px 0;border-bottom:1px solid var(--line)}
+.hrow:last-child{border-bottom:0}
+.hline{display:flex;align-items:center;gap:8px;font-weight:600}
+.hline .sc{font-family:var(--display);font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.hline .d{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.hscor{font-size:13px;color:var(--muted);margin-top:2px}
+.empty{text-align:center;color:var(--muted);padding:28px 16px}
+.empty .btn{margin-top:12px}
+
+/* Modal e aviso */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.modal .box{background:var(--surface);border-radius:14px;padding:18px;max-width:420px;width:100%}
+.modal p{margin:0 0 16px}
+.modal textarea{min-height:200px;font-size:14px;margin-bottom:12px}
+.toast-wrap{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;justify-content:center;padding:0 16px calc(16px + env(safe-area-inset-bottom,0px));pointer-events:none}
+.toast{background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;max-width:440px;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s}
+.toast.show{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="brand">
+      <span aria-hidden="true" style="font-size:24px">⚽</span>
+      <h1>Pelada</h1>
+      <span class="pill">5 por time</span>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="config">Sorteio</button>
+      <button role="tab" data-tab="live">Jogo</button>
+      <button role="tab" data-tab="rank">Artilharia</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- SORTEIO -->
+  <section id="tab-config">
+    <div class="panel">
+      <div class="row">
+        <h2>Jogadores</h2>
+        <span id="countBadge" class="pill-soft">0 jogadores</span>
+      </div>
+      <p class="hint">Um nome por linha.</p>
+      <textarea id="playerInput" placeholder="Tiago&#10;Rafael&#10;Bruno&#10;..."></textarea>
+      <div class="row">
+        <span id="dupNote" class="hint" style="margin:0"></span>
+        <button class="link danger" id="clearBtn">Limpar tudo</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Não podem jogar juntos</h2>
+      <p class="hint">O sorteio nunca coloca esses dois no mesmo time.</p>
+      <div class="two">
+        <select id="r1" aria-label="Jogador 1"></select>
+        <select id="r2" aria-label="Jogador 2"></select>
+      </div>
+      <button class="btn full" id="addRule">Adicionar regra</button>
+      <div id="rules" class="chips"></div>
+    </div>
+
+    <button class="btn-primary full" id="drawBtn">Sortear times</button>
+    <div id="teams" class="teams"></div>
+    <div id="postDraw" class="two" hidden>
+      <button class="btn" id="copyTeams">Copiar para WhatsApp</button>
+      <button class="btn btn-go" data-tab="live">Começar jogos</button>
+    </div>
+  </section>
+
+  <!-- JOGO -->
+  <section id="tab-live" hidden>
+    <div id="liveEmpty" class="panel empty">
+      <p id="liveEmptyText">Sorteie os times para começar os jogos.</p>
+      <button class="btn" data-tab="config">Ir para o sorteio</button>
+    </div>
+
+    <div id="liveBody">
+      <div class="panel">
+        <div class="board-head">
+          <span id="matchNo">Jogo 1</span>
+          <span id="loanNote" class="tag" hidden>com empréstimo</span>
+        </div>
+        <div class="board">
+          <div class="side" id="sideA"><span class="colete"></span><div class="tn" id="nA"></div></div>
+          <div class="score"><span id="sA">0</span><span class="x">x</span><span id="sB">0</span></div>
+          <div class="side" id="sideB"><span class="colete"></span><div class="tn" id="nB"></div></div>
+        </div>
+        <p class="hint center">Toque no jogador que fez o gol.</p>
+        <div class="rosters">
+          <div id="rA" class="roster"></div>
+          <div id="rB" class="roster"></div>
+        </div>
+        <div class="undo-row"><button class="link" id="undoGoal">Desfazer último gol</button></div>
+        <div class="results">
+          <button class="res" data-res="A" id="winA"></button>
+          <button class="res" data-res="D" id="winD">Empate<small>saem os dois</small></button>
+          <button class="res" data-res="B" id="winB"></button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Próximos</h2>
+        <p class="hint">Quem está há mais tempo sem jogar entra primeiro.</p>
+        <div id="queue"></div>
+      </div>
+
+      <div class="panel">
+        <div class="row">
+          <h2>Lesões e ausências</h2>
+          <button class="btn small" id="rebal">Reequilibrar</button>
+        </div>
+        <p class="hint">Toque em quem saiu. Toque de novo quando voltar. Tracejado = ainda sem time (toque para encaixar).</p>
+        <div id="status" class="chips"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARTILHARIA -->
+  <section id="tab-rank" hidden>
+    <div class="panel">
+      <div class="row">
+        <h2>Artilharia</h2>
+        <button class="btn small" id="copyRank">Copiar para WhatsApp</button>
+      </div>
+      <p class="hint">Conta os gols de todos os jogos do dia, inclusive o que está em andamento.</p>
+      <div id="rank"></div>
+    </div>
+    <div class="panel">
+      <h2>Jogos do dia</h2>
+      <div id="hist" style="margin-top:8px"></div>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="box">
+    <p id="mText"></p>
+    <div class="two">
+      <button class="btn" id="mCancel">Cancelar</button>
+      <button class="btn btn-go" id="mOk">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="copyModal" role="dialog" aria-modal="true">
+  <div class="box">
+    <p>Não deu para copiar sozinho. Segure no texto, selecione tudo e copie:</p>
+    <textarea id="copyArea" readonly></textarea>
+    <button class="btn full" id="copyClose">Fechar</button>
+  </div>
+</div>
+
+<div class="toast-wrap"><div class="toast" id="toast" role="status"></div></div>
+
+<script>
+const COLORS = ['#F5C518','#2F6FDB','#E0443E','#F28C28','#8B5CF6','#14B8A6','#EC4899','#8A99A8'];
+const KEY = 'pelada-manager-v2';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tname = i => `Time ${i + 1}`;
+const tcolor = i => COLORS[i % COLORS.length];
+
+function fresh() {
+  return { raw:'', players:[], restrictions:[], teams:[], out:[], queue:[], match:null, matchNo:1, history:[], tab:'config' };
+}
+let S = fresh();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+function load() {
+  try { const r = localStorage.getItem(KEY); if (r) S = Object.assign(fresh(), JSON.parse(r)); } catch (e) {}
+}
+
+const isOut = p => S.out.includes(p);
+const activeOf = i => (S.teams[i] || []).filter(p => !isOut(p));
+
+// Embaralhamento uniforme (Fisher-Yates)
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ---------- Avisos e confirmação (sem alert/confirm) ----------
+let toastTimer;
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+function ask(msg, okLabel = 'Confirmar') {
+  return new Promise(resolve => {
+    $('mText').textContent = msg;
+    $('mOk').textContent = okLabel;
+    $('modal').classList.add('open');
+    const done = v => { $('modal').classList.remove('open'); $('mOk').onclick = $('mCancel').onclick = null; resolve(v); };
+    $('mOk').onclick = () => done(true);
+    $('mCancel').onclick = () => done(false);
+  });
+}
+async function copyText(txt, okMsg) {
+  try { await navigator.clipboard.writeText(txt); toast(okMsg); return; } catch (e) {}
+  const ta = document.createElement('textarea');
+  ta.value = txt; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+  ta.remove();
+  if (ok) { toast(okMsg); return; }
+  $('copyArea').value = txt;
+  $('copyModal').classList.add('open');
+}
+
+// ---------- Jogadores e regras ----------
+function onPlayersInput() {
+  S.raw = $('playerInput').value;
+  const seen = new Set(); let dups = 0;
+  S.players = S.raw.split('\n').map(s => s.trim()).filter(s => {
+    if (!s) return false;
+    const k = s.toLocaleLowerCase('pt-BR');
+    if (seen.has(k)) { dups++; return false; }
+    seen.add(k); return true;
+  });
+  $('dupNote').textContent = dups ? `${dups} nome${dups > 1 ? 's' : ''} repetido${dups > 1 ? 's' : ''} ignorado${dups > 1 ? 's' : ''}` : '';
+  save();
+  renderConfig();
+}
+
+function renderSelects() {
+  ['r1', 'r2'].forEach(id => {
+    const el = $(id), cur = el.value;
+    el.innerHTML = `<option value="">${id === 'r1' ? 'Jogador 1' : 'Jogador 2'}</option>` +
+      S.players.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+    el.value = S.players.includes(cur) ? cur : '';
+  });
+}
+
+function addRule() {
+  const a = $('r1').value, b = $('r2').value;
+  if (!a || !b) return toast('Escolha os dois jogadores.');
+  if (a === b) return toast('Escolha dois jogadores diferentes.');
+  if (S.restrictions.some(([x, y]) => (x === a && y === b) || (x === b && y === a))) return toast('Essa regra já existe.');
+  S.restrictions.push([a, b]);
+  $('r1').value = ''; $('r2').value = '';
+  save(); renderConfig();
+}
+
+function renderRules() {
+  $('rules').innerHTML = S.restrictions.map(([a, b], i) => {
+    const stale = !S.players.includes(a) || !S.players.includes(b);
+    return `<span class="chip${stale ? ' stale' : ''}" title="${stale ? 'Alguém saiu da lista' : ''}">🚫 ${esc(a)} × ${esc(b)}<button class="x" data-rm="${i}" aria-label="Remover regra">✕</button></span>`;
+  }).join('');
+}
+
+// ---------- Sorteio ----------
+function buildTeams(list) {
+  const n = list.length, k = Math.ceil(n / 5);
+  const caps = Array.from({ length: k }, (_, i) => (i < k - 1 ? 5 : n - 5 * (k - 1)));
+  const conflict = new Map(list.map(p => [p, new Set()]));
+  S.restrictions.forEach(([a, b]) => {
+    if (conflict.has(a) && conflict.has(b)) { conflict.get(a).add(b); conflict.get(b).add(a); }
+  });
+
+  for (let attempt = 0; attempt < 40; attempt++) {
+    // Quem tem mais restrições é escalado primeiro; empates continuam aleatórios
+    const order = shuffle(list).sort((x, y) => conflict.get(y).size - conflict.get(x).size);
+    const t = caps.map(() => []);
+    let steps = 0;
+    const place = i => {
+      if (i === order.length) return true;
+      if (++steps > 20000) return false;
+      const p = order[i];
+      for (const ti of shuffle(caps.map((_, j) => j))) {
+        if (t[ti].length >= caps[ti]) continue;
+        if (t[ti].some(q => conflict.get(p).has(q))) continue;
+        t[ti].push(p);
+        if (place(i + 1)) return true;
+        t[ti].pop();
+      }
+      return false;
+    };
+    if (place(0)) return { teams: t, ok: true };
+  }
+  const s = shuffle(list);
+  return { teams: caps.map((c, i) => s.slice(i * 5, i * 5 + c)), ok: false };
+}
+
+function doDraw() {
+  const active = S.players.filter(p => !isOut(p));
+  const r = buildTeams(active);
+  S.teams = r.teams;
+  S.queue = S.teams.map((_, i) => i).slice(2);
+  S.match = S.teams.length >= 2 ? { a: 0, b: 1, goals: [] } : null;
+  save();
+  if (!r.ok) toast('Não deu para cumprir todas as regras de separação. Confira os avisos nos times.');
+}
+
+async function drawClick() {
+  const active = S.players.filter(p => !isOut(p));
+  if (active.length < 2) return toast('Adicione pelo menos 2 jogadores para sortear.');
+  const hasData = S.history.length || (S.match && S.match.goals.length);
+  if (hasData) {
+    if (!await ask('Um novo sorteio zera os jogos e a artilharia do dia. Continuar?', 'Sortear de novo')) return;
+    S.history = []; S.matchNo = 1;
+  }
+  doDraw();
+  renderAll();
+}
+
+async function rebalance() {
+  const active = S.players.filter(p => !isOut(p));
+  if (active.length < 2) return toast('Poucos jogadores disponíveis para reequilibrar.');
+  const extra = S.match && S.match.goals.length ? ' O jogo em andamento será descartado.' : '';
+  if (!await ask(`Redistribuir os jogadores disponíveis em times novos? A artilharia e os jogos já encerrados continuam.${extra}`, 'Reequilibrar')) return;
+  doDraw();
+  renderAll();
+  toast('Times reequilibrados.');
+}
+
+function violations() {
+  return S.restrictions.filter(([a, b]) => S.teams.some(t => t.includes(a) && t.includes(b)));
+}
+
+function renderTeams() {
+  const v = violations();
+  $('teams').innerHTML = S.teams.map((t, i) => {
+    const n = activeOf(i).length;
+    const bad = v.filter(([a]) => t.includes(a));
+    return `<div class="team" style="--c:${tcolor(i)}">
+      <div class="row"><h3>${tname(i)}</h3><span class="count">${n}/5</span></div>
+      <ul>${t.map(p => `<li class="${isOut(p) ? 'is-out' : ''}">${esc(p)}</li>`).join('')}</ul>
+      ${n < 5 ? `<p class="warn">Incompleto: pega ${5 - n} emprestado${5 - n > 1 ? 's' : ''} da fila quando jogar.</p>` : ''}
+      ${bad.map(([a, b]) => `<p class="warn">${esc(a)} e ${esc(b)} ficaram juntos.</p>`).join('')}
+    </div>`;
+  }).join('');
+  $('postDraw').hidden = S.teams.length === 0;
+}
+
+function teamsText() {
+  let msg = '⚽ *PELADA – TIMES* ⚽\n\n';
+  S.teams.forEach((t, i) => {
+    const act = activeOf(i);
+    msg += `*${tname(i).toUpperCase()}* (${act.length}/5)\n` + act.map(p => `• ${p}`).join('\n') + '\n\n';
+  });
+  return msg.trim();
+}
+
+// ---------- Jogo ao vivo ----------
+function lineup() {
+  const { a, b } = S.match;
+  const A = activeOf(a), B = activeOf(b);
+  const pool = [];
+  S.queue.forEach(q => activeOf(q).forEach(p => pool.push(p)));
+  const take = need => pool.splice(0, Math.max(0, need)); // cada emprestado sai do pool: nunca repete
+  const loanA = take(5 - A.length);
+  const loanB = take(5 - B.length);
+  return { A, B, loanA, loanB };
+}
+
+function goalsOf(side) { return S.match.goals.filter(g => g.side === side).length; }
+
+function addGoal(side, p) {
+  S.match.goals.push({ side, p });
+  save(); renderLive(); renderRank();
+}
+function undoGoal() {
+  if (!S.match || !S.match.goals.length) return;
+  const g = S.match.goals.pop();
+  save(); renderLive(); renderRank();
+  toast(`Gol de ${g.p} desfeito.`);
+}
+
+async function finish(res) {
+  const m = S.match;
+  const ga = goalsOf('A'), gb = goalsOf('B');
+  const byScore = ga > gb ? 'A' : gb > ga ? 'B' : 'D';
+  if (m.goals.length && byScore !== res) {
+    if (!await ask(`O placar está ${ga} x ${gb}. Encerrar mesmo assim com esse resultado?`, 'Encerrar')) return;
+  }
+  S.history.unshift({
+    no: S.matchNo, a: tname(m.a), b: tname(m.b), ca: tcolor(m.a), cb: tcolor(m.b),
+    ga, gb, res, goals: m.goals
+  });
+  S.matchNo++;
+
+  let next;
+  if (res === 'A') {
+    S.queue.push(m.b);
+    next = { a: m.a, b: S.queue.shift() };
+  } else if (res === 'B') {
+    S.queue.push(m.a);
+    next = { a: m.b, b: S.queue.shift() };
+  } else {
+    // Empate: saem os dois. Quem estava há mais tempo em quadra (A) vai pro fim da fila.
+    S.queue.push(m.b, m.a);
+    next = { a: S.queue.shift(), b: S.queue.shift() };
+  }
+  S.match = { ...next, goals: [] };
+  save(); renderAll();
+  window.scrollTo({ top: 0 });
+  toast(res === 'D' ? 'Empate: saem os dois times.' : `${tname(res === 'A' ? m.a : m.b)} fica em quadra.`);
+}
+
+function rosterHTML(side, list, loans) {
+  const c = tcolor(side === 'A' ? S.match.a : S.match.b);
+  const cnt = p => S.match.goals.filter(g => g.side === side && g.p === p).length;
+  const btn = (p, loan) => {
+    const k = cnt(p);
+    return `<button class="pbtn${loan ? ' loan' : ''}" style="--c:${c}" data-goal="${side}" data-p="${esc(p)}">
+      <span>${esc(p)}${loan ? '<small>emprestado</small>' : ''}</span>${k ? `<b>⚽ ${k}</b>` : ''}</button>`;
+  };
+  return (list.map(p => btn(p, false)).join('') + loans.map(p => btn(p, true)).join('')) ||
+    '<p class="hint">Sem jogadores disponíveis</p>';
+}
+
+function renderLive() {
+  const has = !!S.match && S.teams.length >= 2;
+  $('liveEmpty').hidden = has;
+  $('liveBody').hidden = !has;
+  if (!has) {
+    $('liveEmptyText').textContent = S.teams.length === 1
+      ? 'Só deu 1 time. São precisos pelo menos 6 jogadores para ter jogo.'
+      : 'Sorteie os times para começar os jogos.';
+    return;
+  }
+  const m = S.match, L = lineup();
+  $('matchNo').textContent = `Jogo ${S.matchNo}`;
+  $('loanNote').hidden = !(L.loanA.length || L.loanB.length);
+  $('sideA').style.setProperty('--c', tcolor(m.a));
+  $('sideB').style.setProperty('--c', tcolor(m.b));
+  $('nA').textContent = tname(m.a);
+  $('nB').textContent = tname(m.b);
+  const ga = goalsOf('A'), gb = goalsOf('B');
+  $('sA').textContent = ga;
+  $('sB').textContent = gb;
+  $('rA').innerHTML = rosterHTML('A', L.A, L.loanA);
+  $('rB').innerHTML = rosterHTML('B', L.B, L.loanB);
+  $('undoGoal').disabled = !m.goals.length;
+
+  $('winA').innerHTML = `Vitória<small>${esc(tname(m.a))}</small>`;
+  $('winB').innerHTML = `Vitória<small>${esc(tname(m.b))}</small>`;
+  $('winA').style.setProperty('--c', tcolor(m.a));
+  $('winB').style.setProperty('--c', tcolor(m.b));
+  const sug = !m.goals.length ? null : ga > gb ? 'winA' : gb > ga ? 'winB' : 'winD';
+  ['winA', 'winB', 'winD'].forEach(id => $(id).classList.toggle('suggest', id === sug));
+
+  // Fila
+  const lent = new Set([...L.loanA, ...L.loanB]);
+  $('queue').innerHTML = S.queue.length ? S.queue.map((q, pos) => {
+    const act = activeOf(q);
+    const give = act.filter(p => lent.has(p));
+    return `<div class="qrow" style="--c:${tcolor(q)}">
+      <span class="qpos">${pos + 1}</span><span class="colete"></span>
+      <div><div><b>${tname(q)}</b></div>
+      <div class="meta">${act.length}/5 disponíveis${give.length ? ` · emprestando ${give.map(esc).join(', ')}` : ''}</div></div>
+    </div>`;
+  }).join('') : '<p class="hint">Só dois times: o próximo jogo é revanche.</p>';
+
+  // Status
+  $('status').innerHTML = S.players.map(p => {
+    const ti = S.teams.findIndex(t => t.includes(p));
+    const cls = ti < 0 ? ' no-team' : isOut(p) ? ' is-out' : '';
+    return `<button class="chip${cls}" style="--c:${ti < 0 ? 'transparent' : tcolor(ti)}" data-st="${esc(p)}"><span class="dot"></span>${esc(p)}${isOut(p) ? ' 🚑' : ''}</button>`;
+  }).join('');
+}
+
+function toggleStatus(p) {
+  const ti = S.teams.findIndex(t => t.includes(p));
+  if (ti < 0) {
+    if (!S.teams.length) return toast('Sorteie os times primeiro.');
+    let best = 0;
+    S.teams.forEach((_, i) => { if (activeOf(i).length < activeOf(best).length) best = i; });
+    S.teams[best].push(p);
+    S.out = S.out.filter(x => x !== p);
+    toast(`${p} entrou no ${tname(best)}.`);
+  } else if (isOut(p)) {
+    S.out = S.out.filter(x => x !== p);
+    toast(`${p} voltou para o ${tname(ti)}.`);
+  } else {
+    S.out.push(p);
+    toast(`${p} fora. Se faltar gente, o time pega emprestado da fila.`);
+  }
+  save(); renderAll();
+}
+
+// ---------- Artilharia ----------
+function tally() {
+  const t = {};
+  const add = g => { t[g.p] = (t[g.p] || 0) + 1; };
+  S.history.forEach(h => h.goals.forEach(add));
+  if (S.match) S.match.goals.forEach(add);
+  return Object.entries(t).sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0], 'pt-BR'));
+}
+function withPositions(list) {
+  let pos = 0, last = null;
+  return list.map(([p, g], i) => { if (g !== last) { pos = i + 1; last = g; } return { p, g, pos }; });
+}
+
+function renderRank() {
+  const r = withPositions(tally());
+  $('rank').innerHTML = r.length ? r.map(x => `
+    <div class="rk${x.pos === 1 ? ' top' : ''}">
+      <span class="pos">${x.pos}º</span>
+      <div><div class="nm">${esc(x.p)}</div>${x.pos === 1 ? '<div class="sub">artilheiro 👑</div>' : ''}</div>
+      <span class="g">${x.g}</span>
+    </div>`).join('')
+    : '<p class="hint">Nenhum gol marcado ainda. Na aba Jogo, toque no jogador que fez o gol.</p>';
+
+  $('hist').innerHTML = S.history.length ? S.history.map(h => {
+    const sc = {};
+    h.goals.forEach(g => { sc[g.p] = (sc[g.p] || 0) + 1; });
+    const scorers = Object.entries(sc).map(([p, n]) => `${esc(p)}${n > 1 ? ` (${n})` : ''}`).join(', ');
+    return `<div class="hrow">
+      <div class="hline"><span class="meta" style="color:var(--muted);font-weight:500">Jogo ${h.no}</span>
+        <span class="d" style="--c:${h.ca}"></span>${esc(h.a)} <span class="sc">${h.ga} x ${h.gb}</span> ${esc(h.b)}<span class="d" style="--c:${h.cb}"></span>
+        ${h.res === 'D' ? '<span class="tag">empate</span>' : ''}</div>
+      ${scorers ? `<div class="hscor">⚽ ${scorers}</div>` : ''}
+    </div>`;
+  }).join('') : '<p class="hint">Os jogos encerrados aparecem aqui.</p>';
+}
+
+function rankText() {
+  const r = withPositions(tally());
+  if (!r.length) return '';
+  return '🏆 *ARTILHARIA DA PELADA* 🏆\n\n' +
+    r.map(x => `${x.pos}º ${x.p}: ${x.g} gol${x.g > 1 ? 's' : ''}${x.pos === 1 ? ' 👑' : ''}`).join('\n');
+}
+
+// ---------- Abas e render geral ----------
+function setTab(tab) {
+  S.tab = tab; save();
+  ['config', 'live', 'rank'].forEach(t => {
+    $('tab-' + t).hidden = t !== tab;
+    document.querySelector(`.tabs [data-tab="${t}"]`).setAttribute('aria-selected', t === tab);
+  });
+  renderAll();
+  window.scrollTo({ top: 0 });
+}
+function renderConfig() {
+  $('countBadge').textContent = `${S.players.length} jogador${S.players.length === 1 ? '' : 'es'}`;
+  renderSelects(); renderRules(); renderTeams();
+}
+function renderAll() { renderConfig(); renderLive(); renderRank(); }
+
+async function clearAll() {
+  if (!await ask('Apagar jogadores, regras, times e artilharia?', 'Apagar tudo')) return;
+  S = fresh();
+  $('playerInput').value = '';
+  $('dupNote').textContent = '';
+  save(); setTab('config');
+}
+
+// ---------- Eventos ----------
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-tab],[data-rm],[data-goal],[data-res],[data-st]');
+  if (!t) return;
+  if (t.dataset.tab) return setTab(t.dataset.tab);
+  if (t.dataset.rm !== undefined) { S.restrictions.splice(+t.dataset.rm, 1); save(); return renderConfig(); }
+  if (t.dataset.goal) return addGoal(t.dataset.goal, t.dataset.p);
+  if (t.dataset.res) return finish(t.dataset.res);
+  if (t.dataset.st !== undefined) return toggleStatus(t.dataset.st);
+});
+$('playerInput').addEventListener('input', onPlayersInput);
+$('addRule').addEventListener('click', addRule);
+$('drawBtn').addEventListener('click', drawClick);
+$('clearBtn').addEventListener('click', clearAll);
+$('rebal').addEventListener('click', rebalance);
+$('undoGoal').addEventListener('click', undoGoal);
+$('copyTeams').addEventListener('click', () => copyText(teamsText(), 'Times copiados. É só colar no WhatsApp.'));
+$('copyRank').addEventListener('click', () => {
+  const txt = rankText();
+  if (!txt) return toast('Ainda não tem gol para copiar.');
+  copyText(txt, 'Artilharia copiada. É só colar no WhatsApp.');
+});
+$('copyClose').addEventListener('click', () => $('copyModal').classList.remove('open'));
+
+// ---------- Início ----------
+load();
+$('playerInput').value = S.raw;
+setTab(S.tab || 'config');
+</script>
+</body>
+</html>
